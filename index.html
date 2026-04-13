@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Silicon Carné: Gemini Flash + ElevenAgents voice agents." />
+  <meta name="description" content="Silicon Carné: ElevenAgents Flash i Multilingual — demo głosu." />
   <title>Silicon Carné — voice demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -368,7 +368,7 @@
       align-items: center;
       gap: 0.75rem;
       transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-      cursor: pointer;
+      cursor: default;
     }
 
     .agent-card:hover {
@@ -430,9 +430,9 @@
       <header>
         <h1>Silicon Carné <span>·</span> Voice demo</h1>
         <div class="intro-banner">
-          <p class="tagline">Gemini + ElevenAgents - same LLM, same agent setup; branches differ only by the trained voice, trained on samples sourced from different podcasts, interviews, and other materials.</p>
+          <p class="tagline">ElevenAgents — Flash i Multilingual (dwa odgałęzienia głosu).</p>
           <p class="header-note">
-            The LLM can be switched to any supported one. Episode transcripts can feed a real knowledge base; here the agent only has the system prompt plus the LLM — no transcript RAG in this demo.
+            Prompt systemowy po lewej jest stały; rozmowa startuje przyciskiem 🌶️ przy wybranym agencie.
           </p>
         </div>
       </header>
@@ -447,7 +447,7 @@
           spellcheck="false"
           readonly
           aria-label="System prompt in Markdown"
-          placeholder="🌶️ = load prompt + voice call (fullscreen overlay)."
+          placeholder="Ładowanie promptu z silicon_carne_system_prompt_no_v3.md…"
         ></textarea>
         <p class="hint" id="prompt-status"></p>
       </section>
@@ -499,85 +499,24 @@
       });
     })();
 
-    const PROMPT_URLS = {
-      no_v3: "./silicon_carne_system_prompt_no_v3.md",
-      v3: "./silicon_carne_system_prompt_v3.md"
-    };
+    const PROMPT_URL = "./silicon_carne_system_prompt_no_v3.md";
 
-    const promptBodies = { no_v3: null, v3: null };
+    let promptBody = null;
 
     const AGENTS = [
       {
-        agentId: "agent_1601kp3ap3xrf5ts2tst795wg43f",
-        branchId: "agtbrch_2601kp3ap5cqecerpgj5p7azj16v",
-        promptKey: "no_v3",
-        promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Flash agent #1",
-        talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_1601kp3ap3xrf5ts2tst795wg43f&branch_id=agtbrch_2601kp3ap5cqecerpgj5p7azj16v"
-      },
-      {
-        agentId: "agent_6501kp3azhzae9dscwkjptd921aw",
-        branchId: "agtbrch_3701kp3azj7rewws3p5mqkyym9fx",
-        promptKey: "no_v3",
-        promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Flash agent #2",
-        talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_6501kp3azhzae9dscwkjptd921aw&branch_id=agtbrch_3701kp3azj7rewws3p5mqkyym9fx"
-      },
-      {
-        agentId: "agent_4401kp3b1at4fpnrxfjjzfe3m5gb",
-        branchId: "agtbrch_1401kp3b1b2tfswaqe4qcn27633b",
-        promptKey: "no_v3",
-        promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Flash agent #3",
-        talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_4401kp3b1at4fpnrxfjjzfe3m5gb&branch_id=agtbrch_1401kp3b1b2tfswaqe4qcn27633b"
-      },
-      {
         agentId: "agent_7401kp3et1xqf2fa7wgzwd1cyq27",
         branchId: "agtbrch_2901kp3et262ex0vejpe5mzw4n19",
-        promptKey: "no_v3",
-        promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Flash agent #4",
+        name: "Flash",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_7401kp3et1xqf2fa7wgzwd1cyq27&branch_id=agtbrch_2901kp3et262ex0vejpe5mzw4n19"
       },
       {
-        agentId: "agent_5201kp3b3rrseh9rpxrv1zt1exb2",
-        branchId: "agtbrch_0701kp3b3s13e579kj9zbc9zwtrf",
-        promptKey: "v3",
-        promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "v3 + expressive #1",
+        agentId: "agent_2101kp3rcv0ce6grj1q2w5xc35x0",
+        branchId: "agtbrch_9701kp3rcv9yfet8z8azqyfwpyz0",
+        name: "Multilingual",
         talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_5201kp3b3rrseh9rpxrv1zt1exb2&branch_id=agtbrch_0701kp3b3s13e579kj9zbc9zwtrf"
-      },
-      {
-        agentId: "agent_6901kp3chwn0e7cabg4gaqc6g5cd",
-        branchId: "agtbrch_4201kp3chwy0exsbywxyhqgse33y",
-        promptKey: "v3",
-        promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "v3 + expressive #2",
-        talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_6901kp3chwn0e7cabg4gaqc6g5cd&branch_id=agtbrch_4201kp3chwy0exsbywxyhqgse33y"
-      },
-      {
-        agentId: "agent_2001kp3cm98tej4vhebvaq2dmfp2",
-        branchId: "agtbrch_4601kp3cm9pdf7a8v7cmvx2gcbct",
-        promptKey: "v3",
-        promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "v3 + expressive #3",
-        talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_2001kp3cm98tej4vhebvaq2dmfp2&branch_id=agtbrch_4601kp3cm9pdf7a8v7cmvx2gcbct"
-      },
-      {
-        agentId: "agent_0101kp3evekhf25tpfv24b3kf37w",
-        branchId: "agtbrch_5401kp3evewjfdzvg4pzgd3cxcse",
-        promptKey: "v3",
-        promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "v3 + expressive #4",
-        talkTo:
-          "https://elevenlabs.io/app/talk-to?agent_id=agent_0101kp3evekhf25tpfv24b3kf37w&branch_id=agtbrch_5401kp3evewjfdzvg4pzgd3cxcse"
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_2101kp3rcv0ce6grj1q2w5xc35x0&branch_id=agtbrch_9701kp3rcv9yfet8z8azqyfwpyz0"
       }
     ];
 
@@ -593,47 +532,31 @@
 
     let activeConversation = null;
 
-    function loadPrompt(key) {
-      const url = PROMPT_URLS[key];
-      return fetch(url)
+    function loadPrompt() {
+      return fetch(PROMPT_URL)
         .then((r) => {
           if (!r.ok) throw new Error(r.status + " " + r.statusText);
           return r.text();
         })
         .then((text) => {
-          promptBodies[key] = text;
+          promptBody = text;
+          promptEl.value = text;
         })
         .catch(() => {
-          promptBodies[key] = null;
+          promptBody = null;
+          promptEl.value = "";
+        })
+        .then(() => {
+          if (promptBody != null) {
+            promptStatus.textContent = "";
+          } else {
+            promptStatus.innerHTML =
+              "Brak pliku promptu — serwuj przez HTTP (np. <code>npx serve .</code> lub GitHub Pages). Plik <code>silicon_carne_system_prompt_no_v3.md</code> musi leżeć obok <code>index.html</code>.";
+          }
         });
     }
 
-    Promise.all([loadPrompt("no_v3"), loadPrompt("v3")]).then(() => {
-      const okNo = promptBodies.no_v3 != null;
-      const okV3 = promptBodies.v3 != null;
-      if (okNo && okV3) {
-        promptStatus.textContent = "";
-      } else if (!okNo && !okV3) {
-        promptStatus.innerHTML =
-          "Prompt <code>.md</code> files missing — serve over HTTP (e.g. <code>npx serve .</code> or GitHub Pages). Keep both prompt files beside <code>index.html</code>.";
-      } else {
-        promptStatus.innerHTML =
-          "Partial load: " +
-          (okNo ? "<code>no_v3</code> ✓" : "<code>no_v3</code> ✗") +
-          " · " +
-          (okV3 ? "<code>v3</code> ✓" : "<code>v3</code> ✗") +
-          ". 🌶️ fills the prompt only if that agent’s file loaded.";
-      }
-    });
-
-    function applyPromptForAgent(agent) {
-      const body = promptBodies[agent.promptKey];
-      if (body != null) {
-        promptEl.value = body;
-      } else {
-        promptEl.value = "";
-      }
-    }
+    void loadPrompt();
 
     function isPlaceholder(id) {
       return !id || /^YOUR_AGENT_ID/i.test(id) || id.includes(" ");
@@ -654,7 +577,6 @@
 
     async function startVoiceSession(agent) {
       if (activeConversation) await endVoiceSession();
-      applyPromptForAgent(agent);
 
       if (isPlaceholder(agent.agentId)) {
         window.alert("Set a valid agentId in AGENTS in index.html.");
@@ -720,7 +642,6 @@
         agent.name.replace(/"/g, "&quot;") +
         '"><span aria-hidden="true">🌶️</span></button>';
       card.querySelector("strong").textContent = agent.name;
-      card.addEventListener("click", () => applyPromptForAgent(agent));
       const btn = card.querySelector(".btn-voice");
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
