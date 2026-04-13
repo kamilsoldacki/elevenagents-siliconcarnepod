@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Silicon Carné: ElevenAgents Flash i Multilingual — demo głosu." />
+  <meta name="description" content="Silicon Carné: ElevenAgents Flash and Multilingual voice demo." />
   <title>Silicon Carné — voice demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -214,10 +214,11 @@
     .agents-grid {
       flex: 1;
       min-height: 0;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.65rem;
-      align-content: start;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: clamp(0.85rem, 2vw, 1.15rem);
       overflow-y: auto;
     }
 
@@ -355,18 +356,17 @@
       fill: currentColor;
     }
 
-    @media (max-width: 520px) {
-      .agents-grid { grid-template-columns: 1fr; }
-    }
-
     .agent-card {
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.85rem 0.9rem;
+      border-radius: 14px;
+      padding: clamp(1.1rem, 2.8vw, 1.5rem) clamp(1rem, 2.5vw, 1.35rem);
       background: #0a0a0a;
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      flex-direction: column;
+      align-items: stretch;
+      gap: clamp(0.85rem, 2vw, 1.1rem);
+      flex: 1 1 0;
+      min-height: clamp(7rem, 16vh, 8.5rem);
       transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
       cursor: default;
     }
@@ -377,17 +377,25 @@
       box-shadow: 0 0 0 1px rgba(229, 9, 20, 0.12);
     }
 
-    .agent-meta { flex: 1; min-width: 0; }
+    .agent-meta {
+      flex: 0 0 auto;
+      min-width: 0;
+      text-align: center;
+    }
     .agent-meta strong {
       display: block;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-family: var(--display);
+      font-size: clamp(1.65rem, 5vw, 2.35rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1.05;
     }
 
     .btn-voice {
-      flex-shrink: 0;
-      width: 48px;
-      height: 48px;
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: clamp(3.25rem, 10vw, 4.25rem);
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--accent-dim);
@@ -396,7 +404,7 @@
       align-items: center;
       justify-content: center;
       transition: transform 0.12s, background 0.12s, border-color 0.12s;
-      font-size: 1.45rem;
+      font-size: clamp(1.85rem, 5.5vw, 2.5rem);
       line-height: 1;
       padding: 0;
     }
@@ -430,9 +438,9 @@
       <header>
         <h1>Silicon Carné <span>·</span> Voice demo</h1>
         <div class="intro-banner">
-          <p class="tagline">ElevenAgents — Flash i Multilingual (dwa odgałęzienia głosu).</p>
+          <p class="tagline">ElevenAgents — Flash and Multilingual: two voice branches, same setup.</p>
           <p class="header-note">
-            Prompt systemowy po lewej jest stały; rozmowa startuje przyciskiem 🌶️ przy wybranym agencie.
+            The system prompt on the left is fixed for this demo. Start a voice session with the 🌶️ button on an agent card.
           </p>
         </div>
       </header>
@@ -447,7 +455,7 @@
           spellcheck="false"
           readonly
           aria-label="System prompt in Markdown"
-          placeholder="Ładowanie promptu z silicon_carne_system_prompt_no_v3.md…"
+          placeholder="Loading prompt from silicon_carne_system_prompt_no_v3.md…"
         ></textarea>
         <p class="hint" id="prompt-status"></p>
       </section>
@@ -551,7 +559,7 @@
             promptStatus.textContent = "";
           } else {
             promptStatus.innerHTML =
-              "Brak pliku promptu — serwuj przez HTTP (np. <code>npx serve .</code> lub GitHub Pages). Plik <code>silicon_carne_system_prompt_no_v3.md</code> musi leżeć obok <code>index.html</code>.";
+              "Prompt file missing — serve over HTTP (e.g. <code>npx serve .</code> or GitHub Pages). Keep <code>silicon_carne_system_prompt_no_v3.md</code> next to <code>index.html</code>.";
           }
         });
     }
