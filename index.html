@@ -1,29 +1,49 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Demo — Prompt & ElevenAgents</title>
+  <meta name="description" content="Silicon Carne voice agent demo — system prompts and ElevenLabs agents." />
+  <title>Silicon Carne — Voice Agent Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
   <style>
     :root {
-      --bg: #0c0d10;
-      --panel: #14161c;
-      --border: #252830;
-      --text: #e8eaef;
-      --muted: #8b92a5;
-      --accent: #6ee7b7;
-      --accent-dim: rgba(110, 231, 183, 0.15);
-      --danger: #f87171;
-      --radius: 14px;
-      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --bg: #060606;
+      --bg-elevated: #0c0c0c;
+      --panel: #0f0f0f;
+      --border: #242424;
+      --text: #f4f4f5;
+      --muted: #9ca3af;
+      --accent: #e50914;
+      --accent-hover: #ff1a26;
+      --accent-dim: rgba(229, 9, 20, 0.14);
+      --danger: #ff6b6b;
+      --radius: 12px;
+      --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
       --mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
     }
 
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); }
 
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.07;
+      background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 6px 6px;
+    }
+
     .page {
+      position: relative;
+      z-index: 1;
       min-height: 100%;
       display: flex;
       flex-direction: column;
@@ -32,26 +52,85 @@
       margin: 0 auto;
     }
 
-    header {
+    .hero-banner {
+      width: 100%;
+      max-height: min(220px, 28vw);
+      object-fit: cover;
+      object-position: center;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
       margin-bottom: 1.25rem;
+      display: block;
+      background: var(--bg-elevated);
+    }
+
+    .hero-banner[hidden] {
+      display: none;
+      margin-bottom: 0;
+    }
+
+    .brand-row {
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0.75rem;
+      align-items: center;
+      gap: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .brand-logo {
+      width: clamp(72px, 14vw, 104px);
+      height: auto;
+      flex-shrink: 0;
+      filter: drop-shadow(0 4px 24px rgba(229, 9, 20, 0.35));
+    }
+
+    header {
+      margin-bottom: 0.5rem;
+      flex: 1;
+      min-width: 0;
     }
 
     header h1 {
-      font-size: clamp(1.15rem, 2.5vw, 1.5rem);
-      font-weight: 600;
-      letter-spacing: -0.02em;
+      font-family: var(--display);
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      font-weight: 400;
+      letter-spacing: 0.04em;
       margin: 0;
+      line-height: 1;
+      color: var(--text);
     }
 
-    header p {
-      margin: 0;
-      font-size: 0.875rem;
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header .tagline {
+      margin: 0.35rem 0 0;
+      font-size: 0.9rem;
       color: var(--muted);
+      font-weight: 500;
+    }
+
+    .llm-banner {
+      margin: 0.65rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      max-width: 52rem;
+      line-height: 1.5;
+      padding: 0.65rem 0.85rem;
+      background: var(--accent-dim);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .llm-banner strong.highlight {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .llm-banner strong.accent-text {
+      color: var(--accent);
+      font-weight: 600;
     }
 
     .split {
@@ -74,20 +153,22 @@
       display: flex;
       flex-direction: column;
       min-height: min(70vh, 640px);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
     }
 
     .panel-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      margin-bottom: 0.5rem;
+      font-family: var(--display);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
     }
 
     .panel h2 {
       margin: 0 0 0.75rem;
-      font-size: 1.05rem;
-      font-weight: 600;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     textarea.prompt {
@@ -97,7 +178,7 @@
       resize: vertical;
       border-radius: 10px;
       border: 1px solid var(--border);
-      background: #0a0b0e;
+      background: #080808;
       color: var(--text);
       font-family: var(--mono);
       font-size: 0.8125rem;
@@ -107,7 +188,7 @@
 
     textarea.prompt:focus {
       outline: 2px solid var(--accent-dim);
-      border-color: rgba(110, 231, 183, 0.35);
+      border-color: rgba(229, 9, 20, 0.45);
     }
 
     .hint {
@@ -115,6 +196,12 @@
       font-size: 0.78rem;
       color: var(--muted);
       line-height: 1.45;
+    }
+
+    .hint a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .agents-grid {
@@ -133,16 +220,17 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 0.85rem 0.9rem;
-      background: #0f1116;
+      background: #0a0a0a;
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
     }
 
     .agent-card:hover {
-      border-color: rgba(110, 231, 183, 0.35);
-      background: #12141a;
+      border-color: rgba(229, 9, 20, 0.45);
+      background: #0d0d0d;
+      box-shadow: 0 0 0 1px rgba(229, 9, 20, 0.12);
     }
 
     .agent-meta { flex: 1; min-width: 0; }
@@ -170,12 +258,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.12s, background 0.12s, border-color 0.12s;
+      transition: transform 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
     }
 
     .btn-voice:hover {
-      background: rgba(110, 231, 183, 0.28);
-      border-color: rgba(110, 231, 183, 0.45);
+      background: rgba(229, 9, 20, 0.28);
+      border-color: var(--accent);
+      color: var(--accent-hover);
       transform: scale(1.04);
     }
 
@@ -183,12 +272,11 @@
 
     .btn-voice svg { width: 22px; height: 22px; }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -205,7 +293,7 @@
       border-radius: var(--radius);
       padding: 1rem 1rem 1.25rem;
       position: relative;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(229, 9, 20, 0.08);
     }
 
     .modal header {
@@ -232,7 +320,7 @@
       height: 36px;
       border-radius: 10px;
       border: 1px solid var(--border);
-      background: #0f1116;
+      background: #0a0a0a;
       color: var(--muted);
       cursor: pointer;
       font-size: 1.25rem;
@@ -243,15 +331,14 @@
     }
 
     .modal-close:hover {
-      color: var(--text);
-      border-color: rgba(248, 113, 113, 0.4);
       color: var(--danger);
+      border-color: rgba(255, 107, 107, 0.45);
     }
 
     .widget-host {
       min-height: 120px;
       border-radius: 10px;
-      border: 1px dashed rgba(139, 146, 165, 0.35);
+      border: 1px dashed rgba(156, 163, 175, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -277,72 +364,97 @@
     }
 
     footer {
-      margin-top: 1rem;
+      margin-top: 1.25rem;
       font-size: 0.72rem;
       color: var(--muted);
       text-align: center;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <header>
-      <div>
-        <h1>Demo dla klienta</h1>
-        <p>System prompt po lewej (zależny od wybranego agenta) · ElevenAgents po prawej</p>
-        <p class="llm-banner" style="margin:0.5rem 0 0;font-size:0.78rem;color:var(--muted);max-width:52rem;line-height:1.45;">
-          <strong style="color:var(--text);font-weight:600;">LLM (wszyscy agenci na tej stronie):</strong>
-          Google <strong style="color:var(--accent);font-weight:600;">Gemini 2.5 Flash Lite</strong> — ten sam model językowy; różnice między agentami to gałąź / tryb głosu ElevenLabs (Flash vs v3 + expressive), nie zmiana LLM.
+    <img
+      class="hero-banner"
+      src="images/silicon-carne-hero.jpg"
+      alt="Silicon Carne show art"
+      width="2048"
+      height="339"
+      loading="eager"
+      decoding="async"
+    />
+
+    <div class="brand-row">
+      <a href="https://www.siliconcarne.co/" target="_blank" rel="noopener noreferrer" aria-label="Silicon Carne website">
+        <img class="brand-logo" src="https://www.siliconcarne.co/images/prod/logo.png" alt="Silicon Carne logo" width="200" height="200" />
+      </a>
+      <header>
+        <h1>Silicon Carne <span>·</span> Voice demo</h1>
+        <p class="tagline">Tech talk from Silicon Valley — voice agents for testing</p>
+        <p class="llm-banner">
+          <strong class="highlight">Language model (all agents on this page):</strong>
+          Google <strong class="accent-text">Gemini 2.5 Flash Lite</strong>. It is the same model for every agent. What changes is the ElevenLabs voice branch (Flash vs v3 + expressive), not the text model.
         </p>
-      </div>
-    </header>
+      </header>
+    </div>
 
     <div class="split">
       <section class="panel" aria-labelledby="prompt-heading">
-        <span class="panel-label">Lewa kolumna</span>
-        <h2 id="prompt-heading">System prompt</h2>
+        <span class="panel-label">System prompt</span>
+        <h2 id="prompt-heading">Instructions for the AI</h2>
         <p class="hint" id="prompt-active-line" style="margin-top:0;margin-bottom:0.6rem;">
-          <strong>Aktywny plik:</strong> <span id="prompt-active-file">— wybierz agenta (słuchawki po prawej)</span>
+          <strong>Active file:</strong> <span id="prompt-active-file">Pick an agent (headphones on the right)</span>
         </p>
         <p class="hint" style="margin-top:0;margin-bottom:0.6rem;">
-          Agenci <strong>1–3</strong> (Flash): prompt z <code>silicon_carne_system_prompt_no_v3.md</code>.
-          Agenci <strong>4–6</strong> (v3 + expressive): prompt z <code>silicon_carne_system_prompt_v3.md</code> (odpowiednik pliku z Downloads ze spacją w nazwie).
+          Agents <strong>1–3</strong> (Flash): prompt from <code>silicon_carne_system_prompt_no_v3.md</code>.
+          Agents <strong>4–6</strong> (v3 + expressive): prompt from <code>silicon_carne_system_prompt_v3.md</code>.
         </p>
         <textarea
           class="prompt"
           id="prompt"
           spellcheck="false"
           readonly
-          aria-label="System prompt w formacie Markdown"
-          placeholder="Kliknij słuchawki przy wybranym agencie — tutaj pojawi się użyty w demo system prompt (Markdown)."
+          aria-label="System prompt in Markdown"
+          placeholder="Click the headphones on an agent — the matching system prompt (Markdown) will show here."
         ></textarea>
         <p class="hint" id="prompt-status"></p>
       </section>
 
       <section class="panel" aria-labelledby="agents-heading">
-        <span class="panel-label">Prawa kolumna</span>
-        <h2 id="agents-heading">ElevenAgents</h2>
+        <span class="panel-label">Talk</span>
+        <h2 id="agents-heading">ElevenLabs agents</h2>
         <p class="hint" style="margin-top:0;margin-bottom:0.75rem;">
-          Sześciu agentów (gałęzie <a href="https://elevenlabs.io/app/talk-to" style="color:var(--accent);">talk-to</a>).
-          <strong>#1–3</strong> — tryb Flash (bez tagów audio w promptcie).
+          Six agents (branches on <a href="https://elevenlabs.io/app/talk-to">ElevenLabs talk-to</a>).
+          <strong>#1–3</strong> — Flash mode (no audio tags in the prompt).
           <strong>#4–6</strong> — ElevenLabs <strong>v3 conversational + expressive</strong>.
-          Po kliknięciu <strong>słuchawek</strong> po prawej: otwiera się rozmowa <em>i jednocześnie</em> po lewej widać dokładny plik promptu przypisany do tego agenta.
+          When you click the <strong>headphones</strong>, a chat opens <em>and</em> the left column shows the exact prompt file for that agent.
         </p>
         <div class="agents-grid" id="agents-grid"></div>
       </section>
     </div>
 
     <footer>
-      Wszyscy agenci: LLM <strong>Gemini 2.5 Flash Lite</strong>.
-      GitHub Pages: allowlist domeny w ElevenLabs · agent publiczny (o ile nie używasz signed URL).
+      All agents use LLM <strong>Gemini 2.5 Flash Lite</strong>.
+      On GitHub Pages: allowlist your domain in ElevenLabs · keep the agent public (unless you use a signed URL).
+      Brand: <a href="https://www.siliconcarne.co/" target="_blank" rel="noopener noreferrer">siliconcarne.co</a>
     </footer>
   </div>
 
   <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
-      <button type="button" class="modal-close" id="modal-close" aria-label="Zamknij">×</button>
+      <button type="button" class="modal-close" id="modal-close" aria-label="Close">×</button>
       <header>
-        <h3 id="modal-title">Rozmowa</h3>
+        <h3 id="modal-title">Chat</h3>
         <p class="sub" id="modal-sub"></p>
       </header>
       <div class="widget-host" id="widget-host"></div>
@@ -350,23 +462,39 @@
   </div>
 
   <script>
+    const HERO_REMOTE_FALLBACK =
+      "https://yt3.googleusercontent.com/l2zO7DVXDgk_ZvjY7Z3wNK4zeJdB0NbMI8laXl2BXxHmLOIUPQPOQ1lfbPpwv8u8dU2KS7CAxA=w2276-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj";
+
+    (function initHeroBanner() {
+      const img = document.querySelector(".hero-banner");
+      if (!img) return;
+      img.addEventListener("error", function onHeroError() {
+        const step = img.dataset.heroFallbackStep || "0";
+        if (step === "0" && HERO_REMOTE_FALLBACK) {
+          img.dataset.heroFallbackStep = "1";
+          img.src = HERO_REMOTE_FALLBACK;
+          return;
+        }
+        img.removeEventListener("error", onHeroError);
+        img.hidden = true;
+      });
+    })();
+
     const PROMPT_URLS = {
       no_v3: "./silicon_carne_system_prompt_no_v3.md",
       v3: "./silicon_carne_system_prompt_v3.md"
     };
 
-    /** Treści promptów wczytywane raz; lewa kolumna przełączana przy kliknięciu słuchawek. */
     const promptBodies = { no_v3: null, v3: null };
 
-    /** LLM dla wszystkich: Google Gemini 2.5 Flash Lite (jak w nagłówku strony). */
     const AGENTS = [
       {
         agentId: "agent_1601kp3ap3xrf5ts2tst795wg43f",
         branchId: "agtbrch_2601kp3ap5cqecerpgj5p7azj16v",
         promptKey: "no_v3",
         promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Agent Flash #1",
-        role: "Gemini 2.5 Flash Lite · tryb Flash · branch talk-to · Carlos / Silicon Carne",
+        name: "Flash agent #1",
+        role: "Gemini 2.5 Flash Lite · Flash voice · talk-to branch · Carlos / Silicon Carne style",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_1601kp3ap3xrf5ts2tst795wg43f&branch_id=agtbrch_2601kp3ap5cqecerpgj5p7azj16v"
       },
@@ -375,8 +503,8 @@
         branchId: "agtbrch_3701kp3azj7rewws3p5mqkyym9fx",
         promptKey: "no_v3",
         promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Agent Flash #2",
-        role: "Gemini 2.5 Flash Lite · Flash · druga gałąź (A/B)",
+        name: "Flash agent #2",
+        role: "Gemini 2.5 Flash Lite · Flash · second branch (A/B)",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_6501kp3azhzae9dscwkjptd921aw&branch_id=agtbrch_3701kp3azj7rewws3p5mqkyym9fx"
       },
@@ -385,8 +513,8 @@
         branchId: "agtbrch_1401kp3b1b2tfswaqe4qcn27633b",
         promptKey: "no_v3",
         promptFile: "silicon_carne_system_prompt_no_v3.md",
-        name: "Agent Flash #3",
-        role: "Gemini 2.5 Flash Lite · Flash · trzeci wariant brancha",
+        name: "Flash agent #3",
+        role: "Gemini 2.5 Flash Lite · Flash · third branch",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_4401kp3b1at4fpnrxfjjzfe3m5gb&branch_id=agtbrch_1401kp3b1b2tfswaqe4qcn27633b"
       },
@@ -395,7 +523,7 @@
         branchId: "agtbrch_0701kp3b3s13e579kj9zbc9zwtrf",
         promptKey: "v3",
         promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "Agent v3 + expressive #1",
+        name: "v3 + expressive #1",
         role: "Gemini 2.5 Flash Lite · v3 conversational + expressive · branch 1",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_5201kp3b3rrseh9rpxrv1zt1exb2&branch_id=agtbrch_0701kp3b3s13e579kj9zbc9zwtrf"
@@ -405,7 +533,7 @@
         branchId: "agtbrch_4201kp3chwy0exsbywxyhqgse33y",
         promptKey: "v3",
         promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "Agent v3 + expressive #2",
+        name: "v3 + expressive #2",
         role: "Gemini 2.5 Flash Lite · v3 conversational + expressive · branch 2",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_6901kp3chwn0e7cabg4gaqc6g5cd&branch_id=agtbrch_4201kp3chwy0exsbywxyhqgse33y"
@@ -415,7 +543,7 @@
         branchId: "agtbrch_4601kp3cm9pdf7a8v7cmvx2gcbct",
         promptKey: "v3",
         promptFile: "silicon_carne_system_prompt_v3.md",
-        name: "Agent v3 + expressive #3",
+        name: "v3 + expressive #3",
         role: "Gemini 2.5 Flash Lite · v3 conversational + expressive · branch 3",
         talkTo:
           "https://elevenlabs.io/app/talk-to?agent_id=agent_2001kp3cm98tej4vhebvaq2dmfp2&branch_id=agtbrch_4601kp3cm9pdf7a8v7cmvx2gcbct"
@@ -452,29 +580,29 @@
       const okV3 = promptBodies.v3 != null;
       if (okNo && okV3) {
         promptStatus.textContent =
-          "Wczytano oba pliki Markdown. Kliknij słuchawki u agenta — po lewej zobaczysz przypisany do niego system prompt.";
+          "Both Markdown files loaded. Click an agent’s headphones — the matching system prompt appears on the left.";
       } else if (!okNo && !okV3) {
         promptStatus.innerHTML =
-          "Nie udało się wczytać plików <code>.md</code> (często <code>file://</code>). Uruchom: <code>npx serve .</code> albo GitHub Pages — obok <code>index.html</code> muszą być <code>silicon_carne_system_prompt_no_v3.md</code> i <code>silicon_carne_system_prompt_v3.md</code>.";
+          "Could not load the <code>.md</code> files (this often happens with <code>file://</code>). Run <code>npx serve .</code> or use GitHub Pages. Next to <code>index.html</code> you need <code>silicon_carne_system_prompt_no_v3.md</code> and <code>silicon_carne_system_prompt_v3.md</code>.";
       } else {
         promptStatus.innerHTML =
-          "Wczytano tylko część plików: " +
+          "Only some files loaded: " +
           (okNo ? "<code>no_v3</code> ✓" : "<code>no_v3</code> ✗") +
           " · " +
           (okV3 ? "<code>v3</code> ✓" : "<code>v3</code> ✗") +
-          ". Kliknij słuchawki — prompt pojawi się dla agentów z poprawnie wczytanym plikiem.";
+          ". Click headphones — the prompt shows for agents whose file loaded correctly.";
       }
     });
 
     function applyPromptForAgent(agent) {
       const body = promptBodies[agent.promptKey];
-      promptActiveFile.textContent = agent.promptFile + " · powiązany z: " + agent.name;
+      promptActiveFile.textContent = agent.promptFile + " · linked to: " + agent.name;
       if (body != null) {
         promptEl.value = body;
       } else {
         promptEl.value = "";
         promptActiveFile.textContent =
-          "Błąd wczytywania: " + agent.promptFile + " — sprawdź serwer HTTP i ścieżki plików.";
+          "Load error: " + agent.promptFile + " — check your HTTP server and file paths.";
       }
     }
 
@@ -486,7 +614,7 @@
       </svg>`;
 
     function isPlaceholder(id) {
-      return !id || /^TWÓJ_AGENT_ID/i.test(id) || id.includes(" ");
+      return !id || /^YOUR_AGENT_ID/i.test(id) || id.includes(" ");
     }
 
     function openModal(agent) {
@@ -497,8 +625,8 @@
 
       if (isPlaceholder(agent.agentId)) {
         widgetHost.innerHTML =
-          '<div class="widget-placeholder">Uzupełnij <code>agentId</code> w tablicy <code>AGENTS</code> w pliku <code>index.html</code> (skopiuj z panelu ElevenLabs).<br><br>Obecna wartość: <code>' +
-          (agent.agentId || "(puste)") +
+          '<div class="widget-placeholder">Fill in <code>agentId</code> in the <code>AGENTS</code> array in <code>index.html</code> (copy it from the ElevenLabs panel).<br><br>Current value: <code>' +
+          (agent.agentId || "(empty)") +
           "</code></div>";
       } else {
         const el = document.createElement("elevenlabs-convai");
@@ -522,7 +650,7 @@
       card.className = "agent-card";
       card.innerHTML =
         '<div class="agent-meta"><strong></strong><span></span></div>' +
-        '<button type="button" class="btn-voice" aria-label="Rozpocznij rozmowę głosową: ' +
+        '<button type="button" class="btn-voice" aria-label="Start voice chat: ' +
         agent.name.replace(/"/g, "&quot;") +
         '">' +
         headphoneSvg +
@@ -537,7 +665,7 @@
         a.href = agent.talkTo;
         a.target = "_blank";
         a.rel = "noopener noreferrer";
-        a.textContent = "Link talk-to (ElevenLabs)";
+        a.textContent = "Open in ElevenLabs (talk-to)";
         a.style.cssText =
           "display:inline-block;margin-top:0.35rem;color:var(--accent);font-size:0.7rem;text-decoration:underline;text-underline-offset:2px;";
         span.appendChild(a);
