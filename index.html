@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Silicon Carne: Gemini Flash + ElevenLabs voice agents." />
+  <meta name="description" content="Silicon Carne: Gemini Flash + ElevenAgents voice agents." />
   <title>Silicon Carne — voice demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -109,48 +109,58 @@
       color: var(--accent);
     }
 
-    header .tagline {
-      margin: 0.35rem 0 0;
-      font-size: 0.9rem;
-      color: var(--muted);
-      font-weight: 500;
+    .intro-banner {
+      margin: 0.65rem 0 0;
+      padding: 0.75rem 1rem 0.85rem;
+      max-width: 52rem;
+      background: rgba(229, 9, 20, 0.08);
+      border: 1px solid rgba(229, 9, 20, 0.22);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
     }
 
-    .header-note {
-      margin: 0.65rem 0 0;
+    .intro-banner .tagline {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .intro-banner .header-note {
+      margin: 0.55rem 0 0;
       font-size: 0.78rem;
       color: var(--muted);
-      max-width: 52rem;
       line-height: 1.45;
     }
 
     .split {
       flex: 1;
       min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: minmax(min(70vh, 640px), 1fr);
-      gap: clamp(1rem, 2vw, 1.75rem);
+      display: flex;
+      flex-direction: row;
       align-items: stretch;
+      gap: clamp(1rem, 2vw, 1.75rem);
+      min-height: min(70vh, 640px);
     }
 
     @media (max-width: 900px) {
       .split {
-        grid-template-columns: 1fr;
-        grid-template-rows: repeat(2, minmax(0, 1fr));
-        min-height: min(70vh, 640px);
+        flex-direction: column;
       }
     }
 
     .panel {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 0;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: clamp(1rem, 2vw, 1.35rem);
       display: flex;
       flex-direction: column;
-      min-height: 0;
-      height: 100%;
+      overflow: hidden;
       box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
     }
 
@@ -168,10 +178,11 @@
     }
 
     textarea.prompt {
-      flex: 1;
+      flex: 1 1 auto;
+      min-height: 0;
       width: 100%;
-      min-height: 280px;
-      resize: vertical;
+      resize: none;
+      overflow-y: auto;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: #080808;
@@ -417,10 +428,12 @@
       </a>
       <header>
         <h1>Silicon Carne <span>·</span> Voice demo</h1>
-        <p class="tagline">Gemini + ElevenLabs - same LLM, same agent setup; branches differ only by the trained voice, trained on samples sourced from different podcasts, interviews, and other materials.</p>
-        <p class="header-note">
-          The LLM can be switched to any supported one. Episode transcripts can feed a real knowledge base; here the agent only has the system prompt plus the LLM — no transcript RAG in this demo.
-        </p>
+        <div class="intro-banner">
+          <p class="tagline">Gemini + ElevenAgents - same LLM, same agent setup; branches differ only by the trained voice, trained on samples sourced from different podcasts, interviews, and other materials.</p>
+          <p class="header-note">
+            The LLM can be switched to any supported one. Episode transcripts can feed a real knowledge base; here the agent only has the system prompt plus the LLM — no transcript RAG in this demo.
+          </p>
+        </div>
       </header>
     </div>
 
