@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
   <style>
     :root {
       --bg: #060606;
@@ -20,7 +19,6 @@
       --accent: #e50914;
       --accent-hover: #ff1a26;
       --accent-dim: rgba(229, 9, 20, 0.14);
-      --danger: #ff6b6b;
       --radius: 12px;
       --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
@@ -164,11 +162,9 @@
       margin-bottom: 0.35rem;
     }
 
-    .panel h2 {
-      margin: 0 0 0.75rem;
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .panel > .panel-label + textarea.prompt,
+    .panel > .panel-label + .agents-grid {
+      margin-top: 0.5rem;
     }
 
     textarea.prompt {
@@ -248,138 +244,29 @@
 
     .btn-voice {
       flex-shrink: 0;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--accent-dim);
-      color: var(--accent);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
+      transition: transform 0.12s, background 0.12s, border-color 0.12s;
+      font-size: 1.45rem;
+      line-height: 1;
+      padding: 0;
     }
 
     .btn-voice:hover {
       background: rgba(229, 9, 20, 0.28);
       border-color: var(--accent);
-      color: var(--accent-hover);
       transform: scale(1.04);
     }
 
     .btn-voice:active { transform: scale(0.98); }
 
-    .btn-voice svg { width: 22px; height: 22px; }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-
-    .modal-backdrop.open { display: flex; }
-
-    .modal {
-      width: min(100%, 420px);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1rem 1.25rem;
-      position: relative;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(229, 9, 20, 0.08);
-    }
-
-    .modal header {
-      margin: 0 0 0.75rem;
-      padding-right: 2.5rem;
-    }
-
-    .modal h3 {
-      margin: 0;
-      font-size: 1rem;
-    }
-
-    .modal .sub {
-      margin: 0.2rem 0 0;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #0a0a0a;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 1.25rem;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-close:hover {
-      color: var(--danger);
-      border-color: rgba(255, 107, 107, 0.45);
-    }
-
-    .widget-host {
-      min-height: 120px;
-      border-radius: 10px;
-      border: 1px dashed rgba(156, 163, 175, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5rem;
-    }
-
-    .widget-host elevenlabs-convai {
-      width: 100%;
-    }
-
-    .widget-placeholder {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-align: center;
-      padding: 1rem;
-      line-height: 1.5;
-    }
-
-    .widget-placeholder code {
-      font-size: 0.72rem;
-      color: var(--accent);
-      word-break: break-all;
-    }
-
-    footer {
-      margin-top: 1.25rem;
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-align: center;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
@@ -409,55 +296,23 @@
     </div>
 
     <div class="split">
-      <section class="panel" aria-labelledby="prompt-heading">
+      <section class="panel" aria-label="System prompt">
         <span class="panel-label">System prompt</span>
-        <h2 id="prompt-heading">Instructions for the AI</h2>
-        <p class="hint" id="prompt-active-line" style="margin-top:0;margin-bottom:0.6rem;">
-          <strong>Active file:</strong> <span id="prompt-active-file">Pick an agent (headphones on the right)</span>
-        </p>
-        <p class="hint" style="margin-top:0;margin-bottom:0.6rem;">
-          Agents <strong>1–3</strong> (Flash): prompt from <code>silicon_carne_system_prompt_no_v3.md</code>.
-          Agents <strong>4–6</strong> (v3 + expressive): prompt from <code>silicon_carne_system_prompt_v3.md</code>.
-        </p>
         <textarea
           class="prompt"
           id="prompt"
           spellcheck="false"
           readonly
           aria-label="System prompt in Markdown"
-          placeholder="Click the headphones on an agent — the matching system prompt (Markdown) will show here."
+          placeholder="Click 🌶️ on an agent — the matching system prompt (Markdown) shows here, and ElevenLabs opens in a new tab."
         ></textarea>
         <p class="hint" id="prompt-status"></p>
       </section>
 
-      <section class="panel" aria-labelledby="agents-heading">
+      <section class="panel" aria-label="Voice chat">
         <span class="panel-label">Talk</span>
-        <h2 id="agents-heading">ElevenLabs agents</h2>
-        <p class="hint" style="margin-top:0;margin-bottom:0.75rem;">
-          Six agents (branches on <a href="https://elevenlabs.io/app/talk-to">ElevenLabs talk-to</a>).
-          <strong>#1–3</strong> — Flash mode (no audio tags in the prompt).
-          <strong>#4–6</strong> — ElevenLabs <strong>v3 conversational + expressive</strong>.
-          When you click the <strong>headphones</strong>, a chat opens <em>and</em> the left column shows the exact prompt file for that agent.
-        </p>
         <div class="agents-grid" id="agents-grid"></div>
       </section>
-    </div>
-
-    <footer>
-      All agents use LLM <strong>Gemini 2.5 Flash Lite</strong>.
-      On GitHub Pages: allowlist your domain in ElevenLabs · keep the agent public (unless you use a signed URL).
-      Brand: <a href="https://www.siliconcarne.co/" target="_blank" rel="noopener noreferrer">siliconcarne.co</a>
-    </footer>
-  </div>
-
-  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal">
-      <button type="button" class="modal-close" id="modal-close" aria-label="Close">×</button>
-      <header>
-        <h3 id="modal-title">Chat</h3>
-        <p class="sub" id="modal-sub"></p>
-      </header>
-      <div class="widget-host" id="widget-host"></div>
     </div>
   </div>
 
@@ -551,14 +406,8 @@
     ];
 
     const grid = document.getElementById("agents-grid");
-    const modal = document.getElementById("modal");
-    const modalTitle = document.getElementById("modal-title");
-    const modalSub = document.getElementById("modal-sub");
-    const modalClose = document.getElementById("modal-close");
-    const widgetHost = document.getElementById("widget-host");
     const promptEl = document.getElementById("prompt");
     const promptStatus = document.getElementById("prompt-status");
-    const promptActiveFile = document.getElementById("prompt-active-file");
 
     function loadPrompt(key) {
       const url = PROMPT_URLS[key];
@@ -579,8 +428,7 @@
       const okNo = promptBodies.no_v3 != null;
       const okV3 = promptBodies.v3 != null;
       if (okNo && okV3) {
-        promptStatus.textContent =
-          "Both Markdown files loaded. Click an agent’s headphones — the matching system prompt appears on the left.";
+        promptStatus.textContent = "";
       } else if (!okNo && !okV3) {
         promptStatus.innerHTML =
           "Could not load the <code>.md</code> files (this often happens with <code>file://</code>). Run <code>npx serve .</code> or use GitHub Pages. Next to <code>index.html</code> you need <code>silicon_carne_system_prompt_no_v3.md</code> and <code>silicon_carne_system_prompt_v3.md</code>.";
@@ -590,59 +438,29 @@
           (okNo ? "<code>no_v3</code> ✓" : "<code>no_v3</code> ✗") +
           " · " +
           (okV3 ? "<code>v3</code> ✓" : "<code>v3</code> ✗") +
-          ". Click headphones — the prompt shows for agents whose file loaded correctly.";
+          ". Click 🌶️ — the prompt shows for agents whose file loaded correctly.";
       }
     });
 
     function applyPromptForAgent(agent) {
       const body = promptBodies[agent.promptKey];
-      promptActiveFile.textContent = agent.promptFile + " · linked to: " + agent.name;
       if (body != null) {
         promptEl.value = body;
       } else {
         promptEl.value = "";
-        promptActiveFile.textContent =
-          "Load error: " + agent.promptFile + " — check your HTTP server and file paths.";
       }
     }
 
-    const headphoneSvg = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-        <path d="M21 19a2 2 0 0 1-2 2h-1v-8h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2z"/>
-        <path d="M3 19a2 2 0 0 0 2 2h1v-8H2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2z"/>
-      </svg>`;
-
-    function isPlaceholder(id) {
-      return !id || /^YOUR_AGENT_ID/i.test(id) || id.includes(" ");
-    }
-
-    function openModal(agent) {
+    function openElevenLabsAgent(agent) {
       applyPromptForAgent(agent);
-      modalTitle.textContent = agent.name;
-      modalSub.textContent = agent.role;
-      widgetHost.innerHTML = "";
-
-      if (isPlaceholder(agent.agentId)) {
-        widgetHost.innerHTML =
-          '<div class="widget-placeholder">Fill in <code>agentId</code> in the <code>AGENTS</code> array in <code>index.html</code> (copy it from the ElevenLabs panel).<br><br>Current value: <code>' +
-          (agent.agentId || "(empty)") +
-          "</code></div>";
-      } else {
-        const el = document.createElement("elevenlabs-convai");
-        el.setAttribute("agent-id", agent.agentId);
-        if (agent.branchId) el.setAttribute("branch-id", agent.branchId);
-        widgetHost.appendChild(el);
-      }
-
-      modal.classList.add("open");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeModal() {
-      modal.classList.remove("open");
-      document.body.style.overflow = "";
-      widgetHost.innerHTML = "";
+      if (!agent.talkTo) return;
+      const a = document.createElement("a");
+      a.href = agent.talkTo;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
     AGENTS.forEach((agent) => {
@@ -650,37 +468,15 @@
       card.className = "agent-card";
       card.innerHTML =
         '<div class="agent-meta"><strong></strong><span></span></div>' +
-        '<button type="button" class="btn-voice" aria-label="Start voice chat: ' +
+        '<button type="button" class="btn-voice" aria-label="Open in ElevenLabs: ' +
         agent.name.replace(/"/g, "&quot;") +
-        '">' +
-        headphoneSvg +
-        "</button>";
+        '"><span aria-hidden="true">🌶️</span></button>';
       card.querySelector("strong").textContent = agent.name;
       const span = card.querySelector("span");
-      span.textContent = "";
-      span.appendChild(document.createTextNode(agent.role));
-      if (agent.talkTo) {
-        span.appendChild(document.createElement("br"));
-        const a = document.createElement("a");
-        a.href = agent.talkTo;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.textContent = "Open in ElevenLabs (talk-to)";
-        a.style.cssText =
-          "display:inline-block;margin-top:0.35rem;color:var(--accent);font-size:0.7rem;text-decoration:underline;text-underline-offset:2px;";
-        span.appendChild(a);
-      }
+      span.textContent = agent.role;
       const btn = card.querySelector(".btn-voice");
-      btn.addEventListener("click", () => openModal(agent));
+      btn.addEventListener("click", () => openElevenLabsAgent(agent));
       grid.appendChild(card);
-    });
-
-    modalClose.addEventListener("click", closeModal);
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModal();
-    });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
     });
   </script>
 </body>
