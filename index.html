@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo — Prompt & ElevenAgents</title>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+  <style>
+    :root {
+      --bg: #0c0d10;
+      --panel: #14161c;
+      --border: #252830;
+      --text: #e8eaef;
+      --muted: #8b92a5;
+      --accent: #6ee7b7;
+      --accent-dim: rgba(110, 231, 183, 0.15);
+      --danger: #f87171;
+      --radius: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); }
+
+    .page {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: clamp(1rem, 3vw, 2rem);
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    header h1 {
+      font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .split {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(1rem, 2vw, 1.75rem);
+      min-height: 0;
+    }
+
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(1rem, 2vw, 1.35rem);
+      display: flex;
+      flex-direction: column;
+      min-height: min(70vh, 640px);
+    }
+
+    .panel-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .panel h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    textarea.prompt {
+      flex: 1;
+      width: 100%;
+      min-height: 280px;
+      resize: vertical;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0a0b0e;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      padding: 1rem;
+    }
+
+    textarea.prompt:focus {
+      outline: 2px solid var(--accent-dim);
+      border-color: rgba(110, 231, 183, 0.35);
+    }
+
+    .hint {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .agents-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      align-content: start;
+    }
+
+    @media (max-width: 520px) {
+      .agents-grid { grid-template-columns: 1fr; }
+    }
+
+    .agent-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 0.9rem;
+      background: #0f1116;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .agent-card:hover {
+      border-color: rgba(110, 231, 183, 0.35);
+      background: #12141a;
+    }
+
+    .agent-meta { flex: 1; min-width: 0; }
+    .agent-meta strong {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+    .agent-meta span {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .btn-voice {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--accent-dim);
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s, background 0.12s, border-color 0.12s;
+    }
+
+    .btn-voice:hover {
+      background: rgba(110, 231, 183, 0.28);
+      border-color: rgba(110, 231, 183, 0.45);
+      transform: scale(1.04);
+    }
+
+    .btn-voice:active { transform: scale(0.98); }
+
+    .btn-voice svg { width: 22px; height: 22px; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(100%, 420px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1rem 1.25rem;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .modal header {
+      margin: 0 0 0.75rem;
+      padding-right: 2.5rem;
+    }
+
+    .modal h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .modal .sub {
+      margin: 0.2rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f1116;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+      border-color: rgba(248, 113, 113, 0.4);
+      color: var(--danger);
+    }
+
+    .widget-host {
+      min-height: 120px;
+      border-radius: 10px;
+      border: 1px dashed rgba(139, 146, 165, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+    }
+
+    .widget-host elevenlabs-convai {
+      width: 100%;
+    }
+
+    .widget-placeholder {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+
+    .widget-placeholder code {
+      font-size: 0.72rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    footer {
+      margin-top: 1rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Demo dla klienta</h1>
+        <p>System prompt po lewej (zależny od wybranego agenta) · ElevenAgents po prawej</p>
+        <p class="llm-banner" style="margin:0.5rem 0 0;font-size:0.78rem;color:var(--muted);max-width:52rem;line-height:1.45;">
+          <strong style="color:var(--text);font-weight:600;">LLM (wszyscy agenci na tej stronie):</strong>
+          Google <strong style="color:var(--accent);font-weight:600;">Gemini 2.5 Flash Lite</strong> — ten sam model językowy; różnice między agentami to gałąź / tryb głosu ElevenLabs (Flash vs v3 + expressive), nie zmiana LLM.
+        </p>
+      </div>
+    </header>
+
+    <div class="split">
+      <section class="panel" aria-labelledby="prompt-heading">
+        <span class="panel-label">Lewa kolumna</span>
+        <h2 id="prompt-heading">System prompt</h2>
+        <p class="hint" id="prompt-active-line" style="margin-top:0;margin-bottom:0.6rem;">
+          <strong>Aktywny plik:</strong> <span id="prompt-active-file">— wybierz agenta (słuchawki po prawej)</span>
+        </p>
+        <p class="hint" style="margin-top:0;margin-bottom:0.6rem;">
+          Agenci <strong>1–3</strong> (Flash): prompt z <code>silicon_carne_system_prompt_no_v3.md</code>.
+          Agenci <strong>4–6</strong> (v3 + expressive): prompt z <code>silicon_carne_system_prompt_v3.md</code> (odpowiednik pliku z Downloads ze spacją w nazwie).
+        </p>
+        <textarea
+          class="prompt"
+          id="prompt"
+          spellcheck="false"
+          readonly
+          aria-label="System prompt w formacie Markdown"
+          placeholder="Kliknij słuchawki przy wybranym agencie — tutaj pojawi się użyty w demo system prompt (Markdown)."
+        ></textarea>
+        <p class="hint" id="prompt-status"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="agents-heading">
+        <span class="panel-label">Prawa kolumna</span>
+        <h2 id="agents-heading">ElevenAgents</h2>
+        <p class="hint" style="margin-top:0;margin-bottom:0.75rem;">
+          Sześciu agentów (gałęzie <a href="https://elevenlabs.io/app/talk-to" style="color:var(--accent);">talk-to</a>).
+          <strong>#1–3</strong> — tryb Flash (bez tagów audio w promptcie).
+          <strong>#4–6</strong> — ElevenLabs <strong>v3 conversational + expressive</strong>.
+          Po kliknięciu <strong>słuchawek</strong> po prawej: otwiera się rozmowa <em>i jednocześnie</em> po lewej widać dokładny plik promptu przypisany do tego agenta.
+        </p>
+        <div class="agents-grid" id="agents-grid"></div>
+      </section>
+    </div>
+
+    <footer>
+      Wszyscy agenci: LLM <strong>Gemini 2.5 Flash Lite</strong>.
+      GitHub Pages: allowlist domeny w ElevenLabs · agent publiczny (o ile nie używasz signed URL).
+    </footer>
+  </div>
+
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <button type="button" class="modal-close" id="modal-close" aria-label="Zamknij">×</button>
+      <header>
+        <h3 id="modal-title">Rozmowa</h3>
+        <p class="sub" id="modal-sub"></p>
+      </header>
+      <div class="widget-host" id="widget-host"></div>
+    </div>
+  </div>
+
+  <script>
+    const PROMPT_URLS = {
+      no_v3: "./silicon_carne_system_prompt_no_v3.md",
+      v3: "./silicon_carne_system_prompt_v3.md"
+    };
+
+    /** Treści promptów wczytywane raz; lewa kolumna przełączana przy kliknięciu słuchawek. */
+    const promptBodies = { no_v3: null, v3: null };
+
+    /** LLM dla wszystkich: Google Gemini 2.5 Flash Lite (jak w nagłówku strony). */
+    const AGENTS = [
+      {
+        agentId: "agent_1601kp3ap3xrf5ts2tst795wg43f",
+        branchId: "agtbrch_2601kp3ap5cqecerpgj5p7azj16v",
+        promptKey: "no_v3",
+        promptFile: "silicon_carne_system_prompt_no_v3.md",
+        name: "Agent Flash #1",
+        role: "Gemini 2.5 Flash Lite · tryb Flash · branch talk-to · Carlos / Silicon Carne",
+        talkTo:
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_1601kp3ap3xrf5ts2tst795wg43f&branch_id=agtbrch_2601kp3ap5cqecerpgj5p7azj16v"
+      },
+      {
+        agentId: "agent_6501kp3azhzae9dscwkjptd921aw",
+        branchId: "agtbrch_3701kp3azj7rewws3p5mqkyym9fx",
+        promptKey: "no_v3",
+        promptFile: "silicon_carne_system_prompt_no_v3.md",
+        name: "Agent Flash #2",
+        role: "Gemini 2.5 Flash Lite · Flash · druga gałąź (A/B)",
+        talkTo:
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_6501kp3azhzae9dscwkjptd921aw&branch_id=agtbrch_3701kp3azj7rewws3p5mqkyym9fx"
+      },
+      {
+        agentId: "agent_4401kp3b1at4fpnrxfjjzfe3m5gb",
+        branchId: "agtbrch_1401kp3b1b2tfswaqe4qcn27633b",
+        promptKey: "no_v3",
+        promptFile: "silicon_carne_system_prompt_no_v3.md",
+        name: "Agent Flash #3",
+        role: "Gemini 2.5 Flash Lite · Flash · trzeci wariant brancha",
+        talkTo:
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_4401kp3b1at4fpnrxfjjzfe3m5gb&branch_id=agtbrch_1401kp3b1b2tfswaqe4qcn27633b"
+      },
+      {
+        agentId: "agent_5201kp3b3rrseh9rpxrv1zt1exb2",
+        branchId: "agtbrch_0701kp3b3s13e579kj9zbc9zwtrf",
+        promptKey: "v3",
+        promptFile: "silicon_carne_system_prompt_v3.md",
+        name: "Agent v3 + expressive #1",
+        role: "Gemini 2.5 Flash Lite · v3 conversational + expressive · branch 1",
+        talkTo:
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_5201kp3b3rrseh9rpxrv1zt1exb2&branch_id=agtbrch_0701kp3b3s13e579kj9zbc9zwtrf"
+      },
+      {
+        agentId: "agent_6901kp3chwn0e7cabg4gaqc6g5cd",
+        branchId: "agtbrch_4201kp3chwy0exsbywxyhqgse33y",
+        promptKey: "v3",
+        promptFile: "silicon_carne_system_prompt_v3.md",
+        name: "Agent v3 + expressive #2",
+        role: "Gemini 2.5 Flash Lite · v3 conversational + expressive · branch 2",
+        talkTo:
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_6901kp3chwn0e7cabg4gaqc6g5cd&branch_id=agtbrch_4201kp3chwy0exsbywxyhqgse33y"
+      },
+      {
+        agentId: "agent_2001kp3cm98tej4vhebvaq2dmfp2",
+        branchId: "agtbrch_4601kp3cm9pdf7a8v7cmvx2gcbct",
+        promptKey: "v3",
+        promptFile: "silicon_carne_system_prompt_v3.md",
+        name: "Agent v3 + expressive #3",
+        role: "Gemini 2.5 Flash Lite · v3 conversational + expressive · branch 3",
+        talkTo:
+          "https://elevenlabs.io/app/talk-to?agent_id=agent_2001kp3cm98tej4vhebvaq2dmfp2&branch_id=agtbrch_4601kp3cm9pdf7a8v7cmvx2gcbct"
+      }
+    ];
+
+    const grid = document.getElementById("agents-grid");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalSub = document.getElementById("modal-sub");
+    const modalClose = document.getElementById("modal-close");
+    const widgetHost = document.getElementById("widget-host");
+    const promptEl = document.getElementById("prompt");
+    const promptStatus = document.getElementById("prompt-status");
+    const promptActiveFile = document.getElementById("prompt-active-file");
+
+    function loadPrompt(key) {
+      const url = PROMPT_URLS[key];
+      return fetch(url)
+        .then((r) => {
+          if (!r.ok) throw new Error(r.status + " " + r.statusText);
+          return r.text();
+        })
+        .then((text) => {
+          promptBodies[key] = text;
+        })
+        .catch(() => {
+          promptBodies[key] = null;
+        });
+    }
+
+    Promise.all([loadPrompt("no_v3"), loadPrompt("v3")]).then(() => {
+      const okNo = promptBodies.no_v3 != null;
+      const okV3 = promptBodies.v3 != null;
+      if (okNo && okV3) {
+        promptStatus.textContent =
+          "Wczytano oba pliki Markdown. Kliknij słuchawki u agenta — po lewej zobaczysz przypisany do niego system prompt.";
+      } else if (!okNo && !okV3) {
+        promptStatus.innerHTML =
+          "Nie udało się wczytać plików <code>.md</code> (często <code>file://</code>). Uruchom: <code>npx serve .</code> albo GitHub Pages — obok <code>index.html</code> muszą być <code>silicon_carne_system_prompt_no_v3.md</code> i <code>silicon_carne_system_prompt_v3.md</code>.";
+      } else {
+        promptStatus.innerHTML =
+          "Wczytano tylko część plików: " +
+          (okNo ? "<code>no_v3</code> ✓" : "<code>no_v3</code> ✗") +
+          " · " +
+          (okV3 ? "<code>v3</code> ✓" : "<code>v3</code> ✗") +
+          ". Kliknij słuchawki — prompt pojawi się dla agentów z poprawnie wczytanym plikiem.";
+      }
+    });
+
+    function applyPromptForAgent(agent) {
+      const body = promptBodies[agent.promptKey];
+      promptActiveFile.textContent = agent.promptFile + " · powiązany z: " + agent.name;
+      if (body != null) {
+        promptEl.value = body;
+      } else {
+        promptEl.value = "";
+        promptActiveFile.textContent =
+          "Błąd wczytywania: " + agent.promptFile + " — sprawdź serwer HTTP i ścieżki plików.";
+      }
+    }
+
+    const headphoneSvg = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+        <path d="M21 19a2 2 0 0 1-2 2h-1v-8h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2z"/>
+        <path d="M3 19a2 2 0 0 0 2 2h1v-8H2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2z"/>
+      </svg>`;
+
+    function isPlaceholder(id) {
+      return !id || /^TWÓJ_AGENT_ID/i.test(id) || id.includes(" ");
+    }
+
+    function openModal(agent) {
+      applyPromptForAgent(agent);
+      modalTitle.textContent = agent.name;
+      modalSub.textContent = agent.role;
+      widgetHost.innerHTML = "";
+
+      if (isPlaceholder(agent.agentId)) {
+        widgetHost.innerHTML =
+          '<div class="widget-placeholder">Uzupełnij <code>agentId</code> w tablicy <code>AGENTS</code> w pliku <code>index.html</code> (skopiuj z panelu ElevenLabs).<br><br>Obecna wartość: <code>' +
+          (agent.agentId || "(puste)") +
+          "</code></div>";
+      } else {
+        const el = document.createElement("elevenlabs-convai");
+        el.setAttribute("agent-id", agent.agentId);
+        if (agent.branchId) el.setAttribute("branch-id", agent.branchId);
+        widgetHost.appendChild(el);
+      }
+
+      modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+      document.body.style.overflow = "";
+      widgetHost.innerHTML = "";
+    }
+
+    AGENTS.forEach((agent) => {
+      const card = document.createElement("article");
+      card.className = "agent-card";
+      card.innerHTML =
+        '<div class="agent-meta"><strong></strong><span></span></div>' +
+        '<button type="button" class="btn-voice" aria-label="Rozpocznij rozmowę głosową: ' +
+        agent.name.replace(/"/g, "&quot;") +
+        '">' +
+        headphoneSvg +
+        "</button>";
+      card.querySelector("strong").textContent = agent.name;
+      const span = card.querySelector("span");
+      span.textContent = "";
+      span.appendChild(document.createTextNode(agent.role));
+      if (agent.talkTo) {
+        span.appendChild(document.createElement("br"));
+        const a = document.createElement("a");
+        a.href = agent.talkTo;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = "Link talk-to (ElevenLabs)";
+        a.style.cssText =
+          "display:inline-block;margin-top:0.35rem;color:var(--accent);font-size:0.7rem;text-decoration:underline;text-underline-offset:2px;";
+        span.appendChild(a);
+      }
+      const btn = card.querySelector(".btn-voice");
+      btn.addEventListener("click", () => openModal(agent));
+      grid.appendChild(card);
+    });
+
+    modalClose.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
+    });
+  </script>
+</body>
+</html>
