@@ -140,12 +140,21 @@
       font-weight: 600;
     }
 
+    .header-note {
+      margin: 0.5rem 0 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-width: 52rem;
+      line-height: 1.45;
+    }
+
     .split {
       flex: 1;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: clamp(1rem, 2vw, 1.75rem);
       min-height: 0;
+      align-items: stretch;
     }
 
     @media (max-width: 900px) {
@@ -210,15 +219,12 @@
     }
 
     .agents-grid {
-      flex: 0 1 auto;
+      flex: 1;
+      min-height: 0;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 0.65rem;
       align-content: start;
-    }
-
-    .panel--agents {
-      min-height: auto;
     }
 
     #callOverlay {
@@ -429,9 +435,12 @@
       </a>
       <header>
         <h1>Silicon Carne <span>·</span> Voice demo</h1>
-        <p class="tagline">Gemini + ElevenLabs — same LLM, different voices.</p>
+        <p class="tagline">Gemini + ElevenLabs — same LLM, same Carlos voice; branches differ by training sample sources (other podcasts and materials).</p>
         <p class="llm-banner">
           <strong class="highlight">LLM:</strong> <strong class="accent-text">Gemini 2.5 Flash Lite</strong>
+        </p>
+        <p class="header-note">
+          The language model can be switched to any supported one. Episode transcripts can feed a real knowledge base; here the agent only has the system prompt plus the LLM — no transcript RAG in this demo.
         </p>
       </header>
     </div>
@@ -450,7 +459,7 @@
         <p class="hint" id="prompt-status"></p>
       </section>
 
-      <section class="panel panel--agents" aria-label="Agent picker">
+      <section class="panel" aria-label="Agent picker">
         <span class="panel-label">Talk</span>
         <div class="agents-grid" id="agents-grid"></div>
       </section>
@@ -637,6 +646,23 @@
       return !id || /^YOUR_AGENT_ID/i.test(id) || id.includes(" ");
     }
 
+    /** Public-agent WebRTC token; include branch_id so the session matches talk-to branches (SDK alone omits branch_id). See https://elevenlabs.io/docs/api-reference/conversations/get-webrtc-token */
+    async function fetchRtcToken(agentId, branchId) {
+      const p = new URLSearchParams({
+        agent_id: agentId,
+        source: "js_sdk",
+        version: "0.2.0"
+      });
+      if (branchId) p.set("branch_id", branchId);
+      const r = await fetch("https://api.elevenlabs.io/v1/convai/conversation/token?" + p.toString());
+      if (!r.ok) {
+        throw new Error((await r.text()) || r.status + " " + r.statusText);
+      }
+      const data = await r.json();
+      if (!data.token) throw new Error("No token in response");
+      return data.token;
+    }
+
     async function endVoiceSession() {
       const c = activeConversation;
       activeConversation = null;
@@ -669,17 +695,19 @@
       callOverlay.setAttribute("aria-hidden", "false");
 
       try {
-        const { Conversation } = await import("https://esm.sh/@11labs/client");
+        const { Conversation } = await import("https://esm.sh/@11labs/client@0.2.0");
+        const token = await fetchRtcToken(agent.agentId, agent.branchId);
         const opts = {
-          agentId: agent.agentId,
+          conversationToken: token,
+          connectionType: "webrtc",
           onConnect: () => {
             callMode.textContent = "Listening…";
           },
           onDisconnect: () => {
             void endVoiceSession();
           },
-          onError: (err) => {
-            console.error(err);
+          onError: (msg, ctx) => {
+            console.error(msg, ctx);
             void endVoiceSession();
             window.alert("Voice session failed. Use HTTPS, allow the mic, and allowlist this host in ElevenLabs.");
           },
@@ -695,7 +723,6 @@
             }
           }
         };
-        if (agent.branchId) opts.branchId = agent.branchId;
         activeConversation = await Conversation.startSession(opts);
       } catch (err) {
         console.error(err);
