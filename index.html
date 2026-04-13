@@ -209,39 +209,46 @@
       align-content: start;
     }
 
-    .convai-wrap {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      margin-top: 0.85rem;
-      padding-top: 0.85rem;
-      border-top: 1px solid var(--border);
+    .panel--agents {
+      min-height: auto;
     }
 
-    .convai-wrap .convai-heading {
-      margin: 0 0 0.5rem;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
+    .voice-in-page {
+      margin-top: clamp(1rem, 2vw, 1.75rem);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(1rem, 2vw, 1.35rem);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
+    }
+
+    .voice-in-page .convai-heading {
+      margin: 0.35rem 0 0.65rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
     }
 
     .widget-host {
       flex: 1;
-      min-height: 200px;
+      min-height: 240px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: #080808;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5rem;
+      align-items: stretch;
+      justify-content: stretch;
+      padding: 0.65rem;
     }
 
     .widget-host elevenlabs-convai {
+      display: block;
       width: 100%;
-      align-self: stretch;
+      min-height: 220px;
     }
 
     .widget-placeholder {
@@ -333,7 +340,7 @@
         <h1>Silicon Carne <span>·</span> Voice demo</h1>
         <p class="tagline">Gemini + ElevenLabs — same LLM, different voices.</p>
         <p class="llm-banner">
-          <strong class="highlight">LLM:</strong> <strong class="accent-text">Gemini 2.5 Flash Lite</strong> on every tile. <strong>Eight</strong> ElevenLabs agents — <strong>four Flash-voice</strong> branches, <strong>four v3 + Expressive</strong>; each quartet uses <strong>four different podcast / quality sources</strong> for samples, so tone changes while the Markdown prompt can match. <strong>Gemini Flash</strong> = Google’s fast, small model tier. <strong>v3 Expressive</strong> = speech reflects intent, emotion, and emphasis and adapts in real time to how the user sounds and what they say; Flash-voice agents skip that stack (and v3 audio tags).
+          <strong class="highlight">LLM:</strong> <strong class="accent-text">Gemini 2.5 Flash Lite</strong>.
         </p>
       </header>
     </div>
@@ -347,22 +354,24 @@
           spellcheck="false"
           readonly
           aria-label="System prompt in Markdown"
-          placeholder="🌶️ = load prompt here + voice widget under Talk."
+          placeholder="🌶️ = prompt here + live agent section below."
         ></textarea>
         <p class="hint" id="prompt-status"></p>
       </section>
 
-      <section class="panel" aria-label="Voice chat">
+      <section class="panel panel--agents" aria-label="Agent picker">
         <span class="panel-label">Talk</span>
         <div class="agents-grid" id="agents-grid"></div>
-        <div class="convai-wrap">
-          <p class="convai-heading" id="convai-heading" aria-live="polite">Voice</p>
-          <div class="widget-host" id="widget-host">
-            <div class="widget-placeholder">Pick 🌶️ to mount the ElevenLabs widget.</div>
-          </div>
-        </div>
       </section>
     </div>
+
+    <section class="voice-in-page" aria-label="Live voice agent">
+      <span class="panel-label">Live agent</span>
+      <p class="convai-heading" id="convai-heading" aria-live="polite">Not connected — pick 🌶️ above</p>
+      <div class="widget-host" id="widget-host">
+        <div class="widget-placeholder">Pick 🌶️ on an agent card to load the embed here.</div>
+      </div>
+    </section>
   </div>
 
   <script>
@@ -520,7 +529,7 @@
 
     function mountAgentWidget(agent) {
       applyPromptForAgent(agent);
-      convaiHeading.textContent = "Voice: " + agent.name;
+      convaiHeading.textContent = "Live: " + agent.name;
       widgetHost.innerHTML = "";
 
       if (isPlaceholder(agent.agentId)) {
@@ -534,8 +543,13 @@
       const el = document.createElement("elevenlabs-convai");
       el.setAttribute("agent-id", agent.agentId);
       if (agent.branchId) el.setAttribute("branch-id", agent.branchId);
+      el.setAttribute("variant", "expanded");
+      el.setAttribute("dismissible", "false");
+      el.setAttribute("syntax-highlight-theme", "dark");
+      el.setAttribute("avatar-orb-color-1", "#e50914");
+      el.setAttribute("avatar-orb-color-2", "#2a0a0a");
       widgetHost.appendChild(el);
-      widgetHost.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      document.querySelector(".voice-in-page")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     AGENTS.forEach((agent) => {
