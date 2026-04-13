@@ -42,7 +42,7 @@
     .page {
       position: relative;
       z-index: 1;
-      min-height: 100%;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       padding: clamp(1rem, 3vw, 2rem);
@@ -116,32 +116,8 @@
       font-weight: 500;
     }
 
-    .llm-banner {
-      margin: 0.65rem 0 0;
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.5;
-      padding: 0.65rem 0.85rem;
-      background: var(--accent-dim);
-      border-left: 3px solid var(--accent);
-      border-radius: 0 8px 8px 0;
-      display: inline-block;
-      width: fit-content;
-      max-width: 100%;
-    }
-
-    .llm-banner strong.highlight {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .llm-banner strong.accent-text {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
     .header-note {
-      margin: 0.5rem 0 0;
+      margin: 0.65rem 0 0;
       font-size: 0.78rem;
       color: var(--muted);
       max-width: 52rem;
@@ -150,15 +126,20 @@
 
     .split {
       flex: 1;
+      min-height: 0;
       display: grid;
       grid-template-columns: 1fr 1fr;
+      grid-template-rows: minmax(min(70vh, 640px), 1fr);
       gap: clamp(1rem, 2vw, 1.75rem);
-      min-height: 0;
       align-items: stretch;
     }
 
     @media (max-width: 900px) {
-      .split { grid-template-columns: 1fr; }
+      .split {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        min-height: min(70vh, 640px);
+      }
     }
 
     .panel {
@@ -168,7 +149,8 @@
       padding: clamp(1rem, 2vw, 1.35rem);
       display: flex;
       flex-direction: column;
-      min-height: min(70vh, 640px);
+      min-height: 0;
+      height: 100%;
       box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
     }
 
@@ -435,12 +417,9 @@
       </a>
       <header>
         <h1>Silicon Carne <span>·</span> Voice demo</h1>
-        <p class="tagline">Gemini + ElevenLabs — same LLM, same Carlos voice; branches differ by training sample sources (other podcasts and materials).</p>
-        <p class="llm-banner">
-          <strong class="highlight">LLM:</strong> <strong class="accent-text">Gemini 2.5 Flash Lite</strong>
-        </p>
+        <p class="tagline">Gemini + ElevenLabs - same LLM, same agent setup; branches differ only by the trained voice, trained on samples sourced from different podcasts, interviews, and other materials.</p>
         <p class="header-note">
-          The language model can be switched to any supported one. Episode transcripts can feed a real knowledge base; here the agent only has the system prompt plus the LLM — no transcript RAG in this demo.
+          The LLM can be switched to any supported one. Episode transcripts can feed a real knowledge base; here the agent only has the system prompt plus the LLM — no transcript RAG in this demo.
         </p>
       </header>
     </div>
@@ -646,23 +625,6 @@
       return !id || /^YOUR_AGENT_ID/i.test(id) || id.includes(" ");
     }
 
-    /** Public-agent WebRTC token; include branch_id so the session matches talk-to branches (SDK alone omits branch_id). See https://elevenlabs.io/docs/api-reference/conversations/get-webrtc-token */
-    async function fetchRtcToken(agentId, branchId) {
-      const p = new URLSearchParams({
-        agent_id: agentId,
-        source: "js_sdk",
-        version: "0.2.0"
-      });
-      if (branchId) p.set("branch_id", branchId);
-      const r = await fetch("https://api.elevenlabs.io/v1/convai/conversation/token?" + p.toString());
-      if (!r.ok) {
-        throw new Error((await r.text()) || r.status + " " + r.statusText);
-      }
-      const data = await r.json();
-      if (!data.token) throw new Error("No token in response");
-      return data.token;
-    }
-
     async function endVoiceSession() {
       const c = activeConversation;
       activeConversation = null;
@@ -696,10 +658,8 @@
 
       try {
         const { Conversation } = await import("https://esm.sh/@11labs/client@0.2.0");
-        const token = await fetchRtcToken(agent.agentId, agent.branchId);
         const opts = {
-          conversationToken: token,
-          connectionType: "webrtc",
+          agentId: agent.agentId,
           onConnect: () => {
             callMode.textContent = "Listening…";
           },
@@ -723,6 +683,7 @@
             }
           }
         };
+        if (agent.branchId) opts.branchId = agent.branchId;
         activeConversation = await Conversation.startSession(opts);
       } catch (err) {
         console.error(err);
